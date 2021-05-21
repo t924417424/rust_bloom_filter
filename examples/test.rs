@@ -1,4 +1,4 @@
-use bloom_filter::*;
+use bloom_filter_plush::*;
 
 fn main() {
     let mut filter = BloomFilter::new(BloomConfig {
