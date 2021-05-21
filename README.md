@@ -1,5 +1,7 @@
 # Rust语言bloom_filter包（布隆过滤器）
 
+## [在https://crates.io中查看](https://crates.io/crates/bloom_filter_plush)
+
 ## 测试用例
 ```rust
 use bloom_filter::*;

@@ -1,12 +1,12 @@
 [package]
-name = "bloom_filter"
-version = "0.1.0"
+name = "bloom_filter_plush"
+version = "0.1.2"
 license = "Apache-2.0/MIT"
 authors = ["oldcat <924417424@qq.com>"]
 edition = "2018"
 readme = "README.md"
 description = "rust_bloom_filter"
-categories = ["algorithms", "encoding", "filesystem","graphics"]
+categories = ["accessibility","algorithms","authentication","caching"]
 repository = "https://github.com/t924417424/rust_bloom_filter"
 homepage = "https://github.com/t924417424/rust_bloom_filter"
 
