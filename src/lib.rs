@@ -5,14 +5,15 @@ use std::sync::RwLock;
 /// bitmap size = 1024 * 8 bit
 pub const DEFAULT_SIZE: usize = 1 << 10;
 pub const DEFAULT_HASH_LOOP: usize = 10;
-pub struct BloomConfig {
-    pub size: Option<usize>,
-    pub hash_loop: Option<usize>,
-}
+// pub struct BloomConfig {
+//     pub size: Option<usize>,
+//     pub hash_loop: Option<usize>,
+// }
 /// BloomFilter
 pub struct BloomFilter {
     size: usize,
     hash_loop: usize,
+    is_null: bool,
     bitmap: RwLock<Box<Vec<u8>>>,
 }
 
@@ -20,85 +21,95 @@ impl BloomFilter {
     /// create bloomfilter
     /// # example
     /// ```
-    /// use bloom_filter::*;
-    ///
-    /// fn main() {
-    ///     let mut filter = BloomFilter::new(BloomConfig {
-    ///         size: Some(DEFAULT_SIZE),
-    ///         hash_loop: Some(20),
-    ///     });
-    ///     filter.insert("key");
-    ///     println!("{}", filter.contains("key"));
-    ///     println!("{}", filter.contains("key1"));
-    /// }
+    /// test 1
+    /// let mut filter = BloomFilter::new();
+    /// filter.insert("key");
+    /// assert_eq!(true, filter.contains("key"));
+    /// assert_eq!(false, filter.contains("key1"));
+
+    /// // test2
+    /// let mut filter2 = BloomFilter::new().set_size(10);
+    /// filter2.insert("key");
+    /// assert_eq!(true, filter2.contains("key"));
+    /// assert_eq!(false, filter2.contains("key1"));
     ///
     /// ```
-    pub fn new(c: BloomConfig) -> Self {
-        let size = match c.size {
-            Some(size) => {
-                if size <= 0 {
-                    DEFAULT_SIZE
-                } else {
-                    size
-                }
-            }
-            None => DEFAULT_SIZE,
-        };
-        let hash_loop = match c.hash_loop {
-            Some(hash_loop) => {
-                if size <= 0 {
-                    DEFAULT_HASH_LOOP
-                } else {
-                    hash_loop
-                }
-            }
-            None => DEFAULT_HASH_LOOP,
-        };
-        let bitmap: Vec<u8> = vec![0; size];
+    pub fn new() -> Self {
+        let bitmap: Vec<u8> = vec![0; DEFAULT_SIZE];
         Self {
-            size: size,
-            hash_loop: hash_loop,
+            size: DEFAULT_SIZE,
+            hash_loop: DEFAULT_HASH_LOOP,
+            is_null: true,
             bitmap: RwLock::new(Box::new(bitmap)),
         }
     }
 
+    /// Set the bitmap size, the data in the bitmap needs to be empty
+    /// # example
+    /// // test2
+    /// ```
+    /// let mut filter2 = BloomFilter::new().set_size(10);
+    /// filter2.insert("key");
+    /// assert_eq!(true, filter2.contains("key"));
+    /// assert_eq!(false, filter2.contains("key1"));
+    /// ```
+    pub fn set_size(mut self, size: usize) -> Self {
+        if self.is_null {
+            self.size = size;
+            self.bitmap = RwLock::new(Box::new(vec![0; size]));
+        } else {
+            println!(
+                "{}",
+                "The modification is invalid because the bitmap already has data"
+            );
+        }
+        self
+    }
+
+    /// Set the bit occupied by each data
+    /// # example
+    /// // test2
+    /// ```
+    /// let mut filter2 = BloomFilter::new().set_size(10);
+    /// filter2.insert("key");
+    /// assert_eq!(true, filter2.contains("key"));
+    /// assert_eq!(false, filter2.contains("key1"));
+    /// ```
+    pub fn set_hash_loop(mut self, hash_loop: usize) -> Self {
+        if self.is_null {
+            self.hash_loop = hash_loop;
+        } else {
+            println!(
+                "{}",
+                "The modification is invalid because the bitmap already has data"
+            );
+        }
+        self
+    }
+
     /// add key to bloomfilter
     /// # example
+    /// // test2
     /// ```
-    /// use bloom_filter::*;
-    ///
-    /// fn main() {
-    ///     let mut filter = BloomFilter::new(BloomConfig {
-    ///         size: Some(DEFAULT_SIZE),
-    ///         hash_loop: Some(20),
-    ///     });
-    ///     filter.insert("key");
-    ///     println!("{}", filter.contains("key"));
-    ///     println!("{}", filter.contains("key1"));
-    /// }
-    ///
+    /// let mut filter2 = BloomFilter::new().set_size(10);
+    /// filter2.insert("key");
+    /// assert_eq!(true, filter2.contains("key"));
+    /// assert_eq!(false, filter2.contains("key1"));
     /// ```
     pub fn insert(&mut self, key: &str) {
+        self.is_null = false;
         let indexs = self.hash(key);
         self.insert_bitmap(indexs);
     }
 
-
     /// Check whether the bloomfilter has key
     /// # example
+    /// // test2
     /// ```
-    /// use bloom_filter::*;
-    ///
-    /// fn main() {
-    ///     let mut filter = BloomFilter::new(BloomConfig {
-    ///         size: Some(DEFAULT_SIZE),
-    ///         hash_loop: Some(20),
-    ///     });
-    ///     filter.insert("key");
-    ///     println!("{}", filter.contains("key"));
-    ///     println!("{}", filter.contains("key1"));
-    /// }
-    ///
+    /// let mut filter2 = BloomFilter::new().set_size(10);
+    /// filter2.insert("key");
+    /// assert_eq!(true, filter2.contains("key"));
+    /// assert_eq!(false, filter2.contains("key1"));
     /// ```
     pub fn contains(&self, key: &str) -> bool {
         let indexs = self.hash(key);
@@ -107,16 +118,11 @@ impl BloomFilter {
     /// Binary print bitmap
     /// # example
     /// ```
-    /// use bloom_filter::*;
-    ///
-    /// fn main() {
-    ///     let mut filter = BloomFilter::new(BloomConfig {
-    ///         size: Some(DEFAULT_SIZE),
-    ///         hash_loop: Some(20),
-    ///     });
-    ///     filter.debug();
-    ///     filter.insert("key");
-    ///     filter.debug();
+    /// let mut filter2 = BloomFilter::new().set_size(10);
+    /// filter2.insert("key");
+    /// assert_eq!(true, filter2.contains("key"));
+    /// assert_eq!(false, filter2.contains("key1"));
+    /// filter2.debug();
     /// }
     ///
     /// ```
@@ -129,6 +135,12 @@ impl BloomFilter {
             }
             Err(_) => {}
         };
+    }
+
+    /// Reset Bitmap
+    pub fn clear(&mut self) {
+        self.bitmap = RwLock::new(Box::new(vec![0; self.size]));
+        self.is_null = true;
     }
 
     fn insert_bitmap(&mut self, indexs: Vec<usize>) {
