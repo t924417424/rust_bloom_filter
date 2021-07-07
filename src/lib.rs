@@ -1,6 +1,20 @@
 use std::collections::hash_map::DefaultHasher;
+use std::error::Error;
+use std::fmt;
+use std::fs::{File, OpenOptions};
 use std::hash::Hasher;
+use std::io::{Read, Write};
+use std::path::Path;
 use std::sync::RwLock;
+
+#[derive(Debug)]
+struct FilterError(String);
+
+impl fmt::Display for FilterError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "filter error: {}", self.0)
+    }
+}
 
 /// bitmap size = 1024 * 8 bit
 pub const DEFAULT_SIZE: usize = 1 << 10;
@@ -85,6 +99,59 @@ impl BloomFilter {
             );
         }
         self
+    }
+
+    /// create filter form file
+    /// # example
+    /// ```
+    /// let mut filter = BloomFilter::new().load_file("myfilter").unwrap();
+    /// filter.insert("key");
+    /// filter.debug();
+    /// ```
+    pub fn load_file<P: AsRef<Path>>(mut self, filename: P) -> Result<Self, Box<dyn Error>> {
+        if !self.is_null {
+            FilterError("filter not null".into());
+        }
+        let mut load_file = OpenOptions::new().read(true).create(false).open(filename)?;
+        let mut data: Vec<u8> = Vec::new();
+        load_file.read_to_end(&mut data)?;
+        if data.len() >= 8 {
+            let loops = data[data.len() - 8..].as_ptr();
+            let loops = loops as *const usize;
+            let loops = unsafe { *loops };
+            self.size = data.len() - 8;
+            self.hash_loop = loops;
+            self.bitmap = RwLock::new(Box::new(data[..data.len() - 8].to_vec()));
+        } else {
+            FilterError("file error".into());
+        }
+        Ok(self)
+    }
+
+    /// save filter to file
+    /// # example
+    /// ```
+    /// let mut filter = BloomFilter::new();
+    /// filter.save_to_file("key").unwrap();
+    /// filter.debug();
+    /// ```
+    pub fn save_to_file<P: AsRef<Path>>(self, filename: P) -> Result<(), Box<dyn Error>> {
+        let mut load_file = OpenOptions::new()
+            .write(true)
+            .create(false)
+            .open(filename)?;
+        match self.bitmap.read() {
+            Ok(bitmap) => {
+                let mut loops = self.hash_loop.to_ne_bytes().to_vec();
+                let mut bitmap_tmp = bitmap.clone();
+                bitmap_tmp.append(&mut loops);
+                load_file.write_all(bitmap_tmp.as_slice())?;
+            }
+            Err(_) => {
+                FilterError("get bitmap err".into());
+            }
+        }
+        Ok(())
     }
 
     /// add key to bloomfilter
