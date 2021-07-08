@@ -1,7 +1,7 @@
 use std::collections::hash_map::DefaultHasher;
 use std::error::Error;
 use std::fmt;
-use std::fs::{File, OpenOptions};
+use std::fs::OpenOptions;
 use std::hash::Hasher;
 use std::io::{Read, Write};
 use std::path::Path;
