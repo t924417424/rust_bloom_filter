@@ -138,7 +138,7 @@ impl BloomFilter {
     pub fn save_to_file<P: AsRef<Path>>(self, filename: P) -> Result<(), Box<dyn Error>> {
         let mut load_file = OpenOptions::new()
             .write(true)
-            .create(false)
+            .create(true)
             .open(filename)?;
         match self.bitmap.read() {
             Ok(bitmap) => {
