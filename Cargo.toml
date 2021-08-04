@@ -1,6 +1,6 @@
 [package]
 name = "bloom_filter_plus"
-version = "0.1.5"
+version = "0.1.6"
 license = "Apache-2.0/MIT"
 authors = ["oldcat <924417424@qq.com>"]
 edition = "2018"
