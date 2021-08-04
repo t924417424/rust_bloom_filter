@@ -11,7 +11,6 @@ fn main() {
 
     let filter_2 = BloomFilter::new();
     filter_2.load_file("test.bitmap").unwrap();
-    filter_2.set_size(10);
     println!("");
     filter_2.debug();
     assert_eq!(true, filter_2.contains("key").unwrap());
