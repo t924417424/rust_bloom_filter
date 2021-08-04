@@ -25,10 +25,10 @@ fn main() {
     // // test2
     let filter3 = BloomFilter::new();
     filter3.set_size(1024);
-    filter3.insert("key");
+    filter3.insert("key").unwrap();
     filter3.debug();
-    assert_eq!(true, filter3.contains("key"));
-    assert_eq!(false, filter3.contains("key1"));
+    assert_eq!(true, filter3.contains("key").unwrap());
+    assert_eq!(false, filter3.contains("key1").unwrap());
 }
 
 ```

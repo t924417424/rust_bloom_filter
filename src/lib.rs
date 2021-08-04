@@ -46,17 +46,18 @@ impl BloomFilter {
     /// create bloomfilter
     /// # example
     /// ```
-    /// test 1
-    /// let mut filter = BloomFilter::new();
-    /// filter.insert("key");
-    /// assert_eq!(true, filter.contains("key"));
-    /// assert_eq!(false, filter.contains("key1"));
+    /// //test 1
+    /// let filter = BloomFilter::new();
+    /// filter.insert("key").unwrap();
+    /// assert_eq!(true, filter.contains("key").unwrap());
+    /// assert_eq!(false, filter.contains("key1").unwrap());
 
     /// // test2
-    /// let mut filter2 = BloomFilter::new().set_size(10);
-    /// filter2.insert("key");
-    /// assert_eq!(true, filter2.contains("key"));
-    /// assert_eq!(false, filter2.contains("key1"));
+    /// let filter2 = BloomFilter::new();
+    /// filter2.set_size(10).unwrap();
+    /// filter2.insert("key").unwrap();
+    /// assert_eq!(true, filter2.contains("key").unwrap());
+    /// assert_eq!(false, filter2.contains("key1").unwrap());
     ///
     /// ```
     pub fn new() -> Self {
@@ -73,10 +74,11 @@ impl BloomFilter {
     /// # example
     /// // test2
     /// ```
-    /// let mut filter2 = BloomFilter::new().set_size(10);
-    /// filter2.insert("key");
-    /// assert_eq!(true, filter2.contains("key"));
-    /// assert_eq!(false, filter2.contains("key1"));
+    /// let filter2 = BloomFilter::new();
+    /// filter2.set_size(10).unwrap();
+    /// filter2.insert("key").unwrap();
+    /// assert_eq!(true, filter2.contains("key").unwrap());
+    /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn set_size(&self, size: usize) -> &Self {
         match self.is_null.try_read() {
@@ -108,10 +110,11 @@ impl BloomFilter {
     /// # example
     /// // test2
     /// ```
-    /// let mut filter2 = BloomFilter::new().set_size(10);
-    /// filter2.insert("key");
-    /// assert_eq!(true, filter2.contains("key"));
-    /// assert_eq!(false, filter2.contains("key1"));
+    /// let filter2 = BloomFilter::new();
+    /// filter2.set_size(10).unwrap();
+    /// filter2.insert("key").unwrap();
+    /// assert_eq!(true, filter2.contains("key").unwrap());
+    /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn set_hash_loop(&self, hash_loop: usize) -> &Self {
         match self.is_null.try_read() {
@@ -135,8 +138,9 @@ impl BloomFilter {
     /// create filter form file
     /// # example
     /// ```
-    /// let mut filter = BloomFilter::new().load_file("myfilter").unwrap();
-    /// filter.insert("key");
+    /// let filter = BloomFilter::new();
+    /// filter.load_file("myfilter").unwrap();
+    /// filter.insert("key").unwrap();
     /// filter.debug();
     /// ```
     pub fn load_file<P: AsRef<Path>>(&self, filename: P) -> Result<&Self, FilterError> {
@@ -200,7 +204,7 @@ impl BloomFilter {
     /// save filter to file
     /// # example
     /// ```
-    /// let mut filter = BloomFilter::new();
+    /// let filter = BloomFilter::new();
     /// filter.save_to_file("key").unwrap();
     /// filter.debug();
     /// ```
@@ -222,10 +226,11 @@ impl BloomFilter {
     /// # example
     /// // test2
     /// ```
-    /// let mut filter2 = BloomFilter::new().set_size(10);
-    /// filter2.insert("key");
-    /// assert_eq!(true, filter2.contains("key"));
-    /// assert_eq!(false, filter2.contains("key1"));
+    /// let filter2 = BloomFilter::new();
+    /// filter2.set_size(10).unwrap();
+    /// filter2.insert("key").unwrap();
+    /// assert_eq!(true, filter2.contains("key").unwrap());
+    /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn insert(&self, key: &str) -> Result<(), FilterError> {
         match self.is_null.try_write() {
@@ -243,10 +248,11 @@ impl BloomFilter {
     /// # example
     /// // test2
     /// ```
-    /// let mut filter2 = BloomFilter::new().set_size(10);
-    /// filter2.insert("key");
-    /// assert_eq!(true, filter2.contains("key"));
-    /// assert_eq!(false, filter2.contains("key1"));
+    /// let filter2 = BloomFilter::new();
+    /// filter2.set_size(10).unwrap();
+    /// filter2.insert("key").unwrap();
+    /// assert_eq!(true, filter2.contains("key").unwrap());
+    /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn contains(&self, key: &str) -> Result<bool, FilterError> {
         let indexs = self.hash(key);
@@ -255,10 +261,11 @@ impl BloomFilter {
     /// Binary print bitmap
     /// # example
     /// ```
-    /// let mut filter2 = BloomFilter::new().set_size(10);
-    /// filter2.insert("key");
-    /// assert_eq!(true, filter2.contains("key"));
-    /// assert_eq!(false, filter2.contains("key1"));
+    /// let filter2 = BloomFilter::new();
+    /// filter2.set_size(10).unwrap();
+    /// filter2.insert("key").unwrap();
+    /// assert_eq!(true, filter2.contains("key").unwrap());
+    /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// filter2.debug();
     /// }
     ///
