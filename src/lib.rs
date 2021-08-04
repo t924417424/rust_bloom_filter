@@ -81,11 +81,11 @@ impl BloomFilter {
     /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn set_size(&self, size: usize) -> &Self {
-        match self.is_null.try_read() {
+        match self.is_null.read() {
             Ok(is_null) => {
                 if is_null.get() {
                     self.size.set(size);
-                    match self.bitmap.try_write() {
+                    match self.bitmap.write() {
                         Ok(mut bitmap) => {
                             let bitmap = bitmap.get_mut();
                             *bitmap = Box::new(vec![0; size]);
@@ -117,7 +117,7 @@ impl BloomFilter {
     /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn set_hash_loop(&self, hash_loop: usize) -> &Self {
-        match self.is_null.try_read() {
+        match self.is_null.read() {
             Ok(is_null) => {
                 if is_null.get() {
                     self.hash_loop.set(hash_loop);
@@ -144,7 +144,7 @@ impl BloomFilter {
     /// filter.debug();
     /// ```
     pub fn load_file<P: AsRef<Path>>(&self, filename: P) -> Result<&Self, FilterError> {
-        match self.is_null.try_read() {
+        match self.is_null.read() {
             Ok(is_null) => {
                 if !is_null.get() {
                     FilterError::new_err("get self.is_null err")?
@@ -181,14 +181,14 @@ impl BloomFilter {
             let loops = unsafe { *loops };
             self.size.set(data.len() - 8);
             self.hash_loop.set(loops);
-            match self.is_null.try_write() {
+            match self.is_null.write() {
                 Ok(is_null) => {
                     is_null.set(false);
                 }
                 _ => FilterError::new_err("init filter form file error")?,
             }
             // self.bitmap = RwLock::new(RefCell::new(Box::new(data[..data.len() - 8].to_vec())));
-            match self.bitmap.try_write() {
+            match self.bitmap.write() {
                 Ok(mut bitmap) => {
                     let bitmap = bitmap.get_mut();
                     *bitmap = Box::new(data[..data.len() - 8].to_vec());
@@ -210,7 +210,7 @@ impl BloomFilter {
     /// ```
     pub fn save_to_file<P: AsRef<Path>>(&self, filename: P) -> Result<(), Box<dyn Error>> {
         let mut load_file = OpenOptions::new().write(true).create(true).open(filename)?;
-        match self.bitmap.try_read() {
+        match self.bitmap.read() {
             Ok(bitmap) => {
                 let mut loops = self.hash_loop.get().to_ne_bytes().to_vec();
                 let mut bitmap_tmp = bitmap.borrow_mut();
@@ -233,7 +233,7 @@ impl BloomFilter {
     /// assert_eq!(false, filter2.contains("key1").unwrap());
     /// ```
     pub fn insert(&self, key: &str) -> Result<(), FilterError> {
-        match self.is_null.try_write() {
+        match self.is_null.write() {
             Ok(is_null) => {
                 is_null.set(false);
             }
@@ -271,7 +271,7 @@ impl BloomFilter {
     ///
     /// ```
     pub fn debug(&self) {
-        match self.bitmap.try_read() {
+        match self.bitmap.read() {
             Ok(bitmap) => {
                 let bitmap_tmp = bitmap.borrow();
                 for (index, _) in bitmap_tmp.iter().enumerate() {
@@ -285,11 +285,11 @@ impl BloomFilter {
     /// Reset Bitmap
     pub fn clear(&self) -> Result<(), FilterError> {
         // self.bitmap = RwLock::new(RefCell::new(Box::new(vec![0; self.size.get()])));
-        match self.bitmap.try_write() {
+        match self.bitmap.write() {
             Ok(bitmap) => match bitmap.try_borrow_mut() {
                 Ok(mut bitmap) => {
                     *bitmap = Box::new(vec![0; self.size.get()]);
-                    match self.is_null.try_write() {
+                    match self.is_null.write() {
                         Ok(is_null) => {
                             is_null.set(true);
                         }
@@ -304,13 +304,22 @@ impl BloomFilter {
     }
 
     fn insert_bitmap(&self, indexs: Vec<usize>) -> Result<(), FilterError> {
-        match self.bitmap.try_write() {
+        match self.bitmap.write() {
             Ok(bitmap) => {
-                let mut bitmap_tmp = bitmap.borrow_mut();
-                for index in indexs {
-                    //let m = 1 << (indexs[*index] % 8);
-                    bitmap_tmp[index] |= 1 << (index % 8);
+                // let mut bitmap_tmp = bitmap.try_borrow_mut();
+                match bitmap.try_borrow_mut() {
+                    Ok(mut bitmap) => {
+                        for index in indexs {
+                            //let m = 1 << (indexs[*index] % 8);
+                            bitmap[index] |= 1 << (index % 8);
+                        }
+                    }
+                    _ => {}
                 }
+                // for index in indexs {
+                //     //let m = 1 << (indexs[*index] % 8);
+                //     bitmap_tmp[index] |= 1 << (index % 8);
+                // }
                 return Ok(());
             }
             Err(e) => return FilterError::new_err(e.to_string().as_str()),
@@ -319,7 +328,7 @@ impl BloomFilter {
     }
 
     fn contains_bitmap(&self, indexs: Vec<usize>) -> bool {
-        match self.bitmap.try_read() {
+        match self.bitmap.read() {
             Ok(bitmap) => {
                 let bitmap_tmp = bitmap.borrow();
                 for index in indexs {
